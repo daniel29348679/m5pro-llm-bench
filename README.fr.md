@@ -17,10 +17,10 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 |---|---|---|---|---:|
 | Qwen3.6 | `qwen3.6:35b` | 36.0B dense | Q4_K_M | 23 Go |
 | Qwen3.6 | `qwen3.6:27b` | 27.8B dense | Q4_K_M | 17 Go |
-| Qwen3.6 | `qwen3.6:27b-coding-mxfp8` | 27.4B dense | mxfp8 | 31 Go |
-| Qwen3.6 | `qwen3.6:27b-coding-nvfp4` | 27.4B dense | nvfp4 | 19 Go |
-| Qwen3.6 | `qwen3.6:35b-a3b-coding-mxfp8` | 35.1B MoE (3B actif) | mxfp8 | 37 Go |
-| Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B actif) | nvfp4 | 21 Go |
+| Qwen3.6 | 🍎 `qwen3.6:27b-coding-mxfp8` | 27.4B dense | mxfp8 | 31 Go |
+| Qwen3.6 | 🍎 `qwen3.6:27b-coding-nvfp4` | 27.4B dense | nvfp4 | 19 Go |
+| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 35.1B MoE (3B actif) | mxfp8 | 37 Go |
+| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B actif) | nvfp4 | 21 Go |
 | Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 Go |
 | Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 Go |
 | Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 Go |
@@ -32,16 +32,16 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 
 | Rang | Modèle | tok/s |
 |---:|---|---:|
-| 1 | `qwen3.6:35b-a3b-coding-nvfp4` | **80.61** |
+| 1 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | **80.61** |
 | 2 | `gemma4:e4b-nvfp4` | **69.34** |
 | 3 | `gemma4:e4b` | 68.56 |
-| 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
+| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
 | 5 | `qwen3.6:35b` | 41.68 |
 | 6 | `gemma4:e4b-it-bf16` | 28.42 |
 | 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
-| 8 | `qwen3.6:27b-coding-nvfp4` | 16.34 |
+| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 16.34 |
 | 9 | `qwen3.6:27b` | 11.82 |
-| 10 | `qwen3.6:27b-coding-mxfp8` | 9.89 |
+| 10 | 🍎 `qwen3.6:27b-coding-mxfp8` | 9.89 |
 
 ### Vitesse de prefill cold xlong (~11k tokens)
 
@@ -49,13 +49,13 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 |---:|---|---:|
 | 1 | `gemma4:e4b-nvfp4` | **4205.55** |
 | 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
-| 3 | `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
-| 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
+| 3 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
+| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
 | 5 | `gemma4:e4b-it-bf16` | 782.36 |
 | 6 | `gemma4:e4b` | 736.34 |
 | 7 | `qwen3.6:35b` | 562.50 |
-| 8 | `qwen3.6:27b-coding-nvfp4` | 455.78 |
-| 9 | `qwen3.6:27b-coding-mxfp8` | 413.21 |
+| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 455.78 |
+| 9 | 🍎 `qwen3.6:27b-coding-mxfp8` | 413.21 |
 | 10 | `qwen3.6:27b` | 116.00 |
 
 ## Conclusions clés
@@ -73,7 +73,7 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 
 ### 3. mxfp8 est un piège sur Apple Silicon
 
-`qwen3.6:27b-coding-mxfp8` (9.86 tok/s) est **plus lent que le Q4_K_M original (11.82 tok/s)** malgré sa taille 1.8× supérieure — mxfp8 n'a pas d'accélération native sur le backend Metal.
+🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) est **plus lent que le Q4_K_M original (11.82 tok/s)** malgré sa taille 1.8× supérieure — mxfp8 n'a pas d'accélération native sur le backend Metal.
 
 ### 4. L'étiquette MLX n'aide pas le décodage mais accélère le prefill ~5×
 
@@ -89,8 +89,8 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 |---|---:|---:|---:|
 | `qwen3.6:35b` | 27.36 | 41.68 | +52% |
 | `qwen3.6:27b` | 6.24 | 11.82 | +89% |
-| `qwen3.6:27b-coding-mxfp8` | 5.27 | 9.89 | +88% |
-| `qwen3.6:27b-coding-nvfp4` | 16.32 | 16.34 | +0% |
+| 🍎 `qwen3.6:27b-coding-mxfp8` | 5.27 | 9.89 | +88% |
+| 🍎 `qwen3.6:27b-coding-nvfp4` | 16.32 | 16.34 | +0% |
 
 **Les benchmarks reproductibles doivent verrouiller High Power** :
 

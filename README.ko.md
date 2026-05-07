@@ -17,10 +17,10 @@
 |---|---|---|---|---:|
 | Qwen3.6 | `qwen3.6:35b` | 36.0B dense | Q4_K_M | 23 GB |
 | Qwen3.6 | `qwen3.6:27b` | 27.8B dense | Q4_K_M | 17 GB |
-| Qwen3.6 | `qwen3.6:27b-coding-mxfp8` | 27.4B dense | mxfp8 | 31 GB |
-| Qwen3.6 | `qwen3.6:27b-coding-nvfp4` | 27.4B dense | nvfp4 | 19 GB |
-| Qwen3.6 | `qwen3.6:35b-a3b-coding-mxfp8` | 35.1B MoE (3B active) | mxfp8 | 37 GB |
-| Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B active) | nvfp4 | 21 GB |
+| Qwen3.6 | 🍎 `qwen3.6:27b-coding-mxfp8` | 27.4B dense | mxfp8 | 31 GB |
+| Qwen3.6 | 🍎 `qwen3.6:27b-coding-nvfp4` | 27.4B dense | nvfp4 | 19 GB |
+| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 35.1B MoE (3B active) | mxfp8 | 37 GB |
+| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B active) | nvfp4 | 21 GB |
 | Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 GB |
 | Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 GB |
 | Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 GB |
@@ -32,16 +32,16 @@
 
 | 순위 | 모델 | tok/s |
 |---:|---|---:|
-| 1 | `qwen3.6:35b-a3b-coding-nvfp4` | **80.61** |
+| 1 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | **80.61** |
 | 2 | `gemma4:e4b-nvfp4` | **69.34** |
 | 3 | `gemma4:e4b` | 68.56 |
-| 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
+| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
 | 5 | `qwen3.6:35b` | 41.68 |
 | 6 | `gemma4:e4b-it-bf16` | 28.42 |
 | 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
-| 8 | `qwen3.6:27b-coding-nvfp4` | 16.34 |
+| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 16.34 |
 | 9 | `qwen3.6:27b` | 11.82 |
-| 10 | `qwen3.6:27b-coding-mxfp8` | 9.89 |
+| 10 | 🍎 `qwen3.6:27b-coding-mxfp8` | 9.89 |
 
 ### xlong (~11k 토큰) 콜드 prefill 속도
 
@@ -49,13 +49,13 @@
 |---:|---|---:|
 | 1 | `gemma4:e4b-nvfp4` | **4205.55** |
 | 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
-| 3 | `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
-| 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
+| 3 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
+| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
 | 5 | `gemma4:e4b-it-bf16` | 782.36 |
 | 6 | `gemma4:e4b` | 736.34 |
 | 7 | `qwen3.6:35b` | 562.50 |
-| 8 | `qwen3.6:27b-coding-nvfp4` | 455.78 |
-| 9 | `qwen3.6:27b-coding-mxfp8` | 413.21 |
+| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 455.78 |
+| 9 | 🍎 `qwen3.6:27b-coding-mxfp8` | 413.21 |
 | 10 | `qwen3.6:27b` | 116.00 |
 
 ## 핵심 발견
@@ -73,7 +73,7 @@
 
 ### 3. mxfp8 은 Apple Silicon 의 함정
 
-`qwen3.6:27b-coding-mxfp8` (9.86 tok/s) 은 **원본 Q4_K_M (11.82 tok/s) 보다 느리고**, 파일은 1.8배 큼 — mxfp8 은 Metal backend 의 네이티브 가속이 없음.
+🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) 은 **원본 Q4_K_M (11.82 tok/s) 보다 느리고**, 파일은 1.8배 큼 — mxfp8 은 Metal backend 의 네이티브 가속이 없음.
 
 ### 4. MLX 태그는 디코딩에 도움 안 되지만 prefill 은 ~5배 빠름
 
@@ -89,8 +89,8 @@
 |---|---:|---:|---:|
 | `qwen3.6:35b` | 27.36 | 41.68 | +52% |
 | `qwen3.6:27b` | 6.24 | 11.82 | +89% |
-| `qwen3.6:27b-coding-mxfp8` | 5.27 | 9.89 | +88% |
-| `qwen3.6:27b-coding-nvfp4` | 16.32 | 16.34 | +0% |
+| 🍎 `qwen3.6:27b-coding-mxfp8` | 5.27 | 9.89 | +88% |
+| 🍎 `qwen3.6:27b-coding-nvfp4` | 16.32 | 16.34 | +0% |
 
 **재현 가능한 벤치마크는 High Power 를 잠가야 함**:
 
