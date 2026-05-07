@@ -23,7 +23,7 @@
 | Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B active) | nvfp4 | 21 GB |
 | Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 GB |
 | Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 GB |
-| Gemma4 | `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 GB |
+| Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 GB |
 | Gemma4 | `gemma4:e4b-nvfp4` | 8.0B dense | nvfp4 | 9.6 GB |
 
 ## 주요 결과
@@ -38,7 +38,7 @@
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
 | 5 | `qwen3.6:35b` | 41.68 |
 | 6 | `gemma4:e4b-it-bf16` | 28.42 |
-| 7 | `gemma4:e4b-mlx-bf16` | 28.01 |
+| 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
 | 8 | `qwen3.6:27b-coding-nvfp4` | 16.34 |
 | 9 | `qwen3.6:27b` | 11.82 |
 | 10 | `qwen3.6:27b-coding-mxfp8` | 9.89 |
@@ -48,7 +48,7 @@
 | 순위 | 모델 | prefill tok/s |
 |---:|---|---:|
 | 1 | `gemma4:e4b-nvfp4` | **4205.55** |
-| 2 | `gemma4:e4b-mlx-bf16` | **3721.14** |
+| 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
 | 3 | `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
 | 5 | `gemma4:e4b-it-bf16` | 782.36 |
@@ -77,7 +77,7 @@
 
 ### 4. MLX 태그는 디코딩에 도움 안 되지만 prefill 은 ~5배 빠름
 
-`gemma4:e4b-mlx-bf16` 과 `gemma4:e4b-it-bf16` 의 디코딩은 모두 ~28 tok/s 이지만, 콜드 xlong prefill 은 **3721 vs 782 tok/s (4.8배)**. 긴 prompt 시나리오일 때만 MLX 버전 선택.
+🍎 `gemma4:e4b-mlx-bf16` 과 `gemma4:e4b-it-bf16` 의 디코딩은 모두 ~28 tok/s 이지만, 콜드 xlong prefill 은 **3721 vs 782 tok/s (4.8배)**. 긴 prompt 시나리오일 때만 MLX 버전 선택.
 
 ### 5. MoE 는 M5 Pro 에서 매우 유용
 

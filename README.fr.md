@@ -23,7 +23,7 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 | Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B actif) | nvfp4 | 21 Go |
 | Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 Go |
 | Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 Go |
-| Gemma4 | `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 Go |
+| Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 Go |
 | Gemma4 | `gemma4:e4b-nvfp4` | 8.0B dense | nvfp4 | 9.6 Go |
 
 ## Résultats principaux
@@ -38,7 +38,7 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
 | 5 | `qwen3.6:35b` | 41.68 |
 | 6 | `gemma4:e4b-it-bf16` | 28.42 |
-| 7 | `gemma4:e4b-mlx-bf16` | 28.01 |
+| 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
 | 8 | `qwen3.6:27b-coding-nvfp4` | 16.34 |
 | 9 | `qwen3.6:27b` | 11.82 |
 | 10 | `qwen3.6:27b-coding-mxfp8` | 9.89 |
@@ -48,7 +48,7 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 | Rang | Modèle | prefill tok/s |
 |---:|---|---:|
 | 1 | `gemma4:e4b-nvfp4` | **4205.55** |
-| 2 | `gemma4:e4b-mlx-bf16` | **3721.14** |
+| 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
 | 3 | `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
 | 5 | `gemma4:e4b-it-bf16` | 782.36 |
@@ -77,7 +77,7 @@ Ce dépôt mesure la vitesse de **10 LLMs locaux sur Apple M5 Pro / 64 Go** via 
 
 ### 4. L'étiquette MLX n'aide pas le décodage mais accélère le prefill ~5×
 
-`gemma4:e4b-mlx-bf16` et `gemma4:e4b-it-bf16` décodent identiquement à ~28 tok/s, mais le cold xlong prefill est **3721 vs 782 tok/s (4.8×)**. Choisir les variantes MLX uniquement quand les longs prompts dominent.
+🍎 `gemma4:e4b-mlx-bf16` et `gemma4:e4b-it-bf16` décodent identiquement à ~28 tok/s, mais le cold xlong prefill est **3721 vs 782 tok/s (4.8×)**. Choisir les variantes MLX uniquement quand les longs prompts dominent.
 
 ### 5. MoE est rentable sur M5 Pro
 

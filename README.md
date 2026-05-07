@@ -23,7 +23,7 @@ This repo benchmarks **10 local LLMs on Apple M5 Pro / 64 GB** via [Ollama](http
 | Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B active) | nvfp4 | 21 GB |
 | Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 GB |
 | Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 GB |
-| Gemma4 | `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 GB |
+| Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 GB |
 | Gemma4 | `gemma4:e4b-nvfp4` | 8.0B dense | nvfp4 | 9.6 GB |
 
 ## Top results
@@ -38,7 +38,7 @@ This repo benchmarks **10 local LLMs on Apple M5 Pro / 64 GB** via [Ollama](http
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
 | 5 | `qwen3.6:35b` | 41.68 |
 | 6 | `gemma4:e4b-it-bf16` | 28.42 |
-| 7 | `gemma4:e4b-mlx-bf16` | 28.01 |
+| 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
 | 8 | `qwen3.6:27b-coding-nvfp4` | 16.34 |
 | 9 | `qwen3.6:27b` | 11.82 |
 | 10 | `qwen3.6:27b-coding-mxfp8` | 9.89 |
@@ -48,7 +48,7 @@ This repo benchmarks **10 local LLMs on Apple M5 Pro / 64 GB** via [Ollama](http
 | Rank | Model | prefill tok/s |
 |---:|---|---:|
 | 1 | `gemma4:e4b-nvfp4` | **4205.55** |
-| 2 | `gemma4:e4b-mlx-bf16` | **3721.14** |
+| 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
 | 3 | `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
 | 5 | `gemma4:e4b-it-bf16` | 782.36 |
@@ -77,7 +77,7 @@ This repo benchmarks **10 local LLMs on Apple M5 Pro / 64 GB** via [Ollama](http
 
 ### 4. The "MLX" tag doesn't help decode but accelerates prefill ~5×
 
-`gemma4:e4b-mlx-bf16` and `gemma4:e4b-it-bf16` decode identically at ~28 tok/s, but cold xlong prefill is **3721 vs 782 tok/s (4.8×)**. Pick MLX variants only when long prompts dominate.
+🍎 `gemma4:e4b-mlx-bf16` and `gemma4:e4b-it-bf16` decode identically at ~28 tok/s, but cold xlong prefill is **3721 vs 782 tok/s (4.8×)**. Pick MLX variants only when long prompts dominate.
 
 ### 5. MoE pays off on M5 Pro
 

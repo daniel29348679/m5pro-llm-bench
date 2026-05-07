@@ -23,7 +23,7 @@
 | Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B активных) | nvfp4 | 21 ГБ |
 | Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 ГБ |
 | Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 ГБ |
-| Gemma4 | `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 ГБ |
+| Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 ГБ |
 | Gemma4 | `gemma4:e4b-nvfp4` | 8.0B dense | nvfp4 | 9.6 ГБ |
 
 ## Главные результаты
@@ -38,7 +38,7 @@
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
 | 5 | `qwen3.6:35b` | 41.68 |
 | 6 | `gemma4:e4b-it-bf16` | 28.42 |
-| 7 | `gemma4:e4b-mlx-bf16` | 28.01 |
+| 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
 | 8 | `qwen3.6:27b-coding-nvfp4` | 16.34 |
 | 9 | `qwen3.6:27b` | 11.82 |
 | 10 | `qwen3.6:27b-coding-mxfp8` | 9.89 |
@@ -48,7 +48,7 @@
 | Ранг | Модель | prefill tok/s |
 |---:|---|---:|
 | 1 | `gemma4:e4b-nvfp4` | **4205.55** |
-| 2 | `gemma4:e4b-mlx-bf16` | **3721.14** |
+| 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
 | 3 | `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
 | 4 | `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
 | 5 | `gemma4:e4b-it-bf16` | 782.36 |
@@ -77,7 +77,7 @@
 
 ### 4. Тег MLX не помогает декодированию, но ускоряет prefill ~5×
 
-`gemma4:e4b-mlx-bf16` и `gemma4:e4b-it-bf16` декодируют идентично при ~28 tok/s, но холодный xlong prefill — **3721 vs 782 tok/s (4.8×)**. Выбирать MLX-варианты только при доминировании длинных промтов.
+🍎 `gemma4:e4b-mlx-bf16` и `gemma4:e4b-it-bf16` декодируют идентично при ~28 tok/s, но холодный xlong prefill — **3721 vs 782 tok/s (4.8×)**. Выбирать MLX-варианты только при доминировании длинных промтов.
 
 ### 5. MoE окупается на M5 Pro
 
