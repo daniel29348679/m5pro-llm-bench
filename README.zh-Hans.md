@@ -102,6 +102,24 @@ sudo pmset -a powermode 2
 
 所有 10 个模型从 short → 11k token xlong 解码速度只衰减 **4–10%**。Apple M5 Pro / 64 GB 对 16k context 仍未撞瓶颈,KV cache 容量充足。
 
+<!-- mlx-caveat:v1 -->
+## ⚠️ MLX 对照组精确说明 — 引用 finding 3 / 4 前必读
+
+10 个受测模型中,有 5 个是 MLX 变体(🍎):
+
+- 🍎 `qwen3.6:27b-coding-mxfp8`
+- 🍎 `qwen3.6:27b-coding-nvfp4`
+- 🍎 `qwen3.6:35b-a3b-coding-mxfp8`
+- 🍎 `qwen3.6:35b-a3b-coding-nvfp4`
+- 🍎 `gemma4:e4b-mlx-bf16`
+
+对 finding 3 / 4 的精确读法:
+
+- **Finding 3「mxfp8 是地雷」**:对比是 🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) vs 非 MLX 的 `qwen3.6:27b` Q4_K_M (11.82 tok/s)。精准说法:**Ollama Metal backend 上的 MLX mxfp8 路径比 base GGUF Q4_K_M 路径慢**,尽管文件还大 1.8 倍。
+- **Finding 4「MLX 标签对解码没用,但 prefill 大幅领先」**:只有 gemma4 那组是干净的「MLX vs 非 MLX 同 BF16」对比(🍎 `gemma4:e4b-mlx-bf16` vs `gemma4:e4b-it-bf16`)。Qwen3.6 的 `-coding-mxfp8` / `-coding-nvfp4` *两个都是* MLX,所以那边的 nvfp4-vs-mxfp8 对比其实是 **MLX 内部的量化差异**,不是隔离 MLX 路径本身的效应。
+
+简言之:🍎 = MLX 变体;本实验组唯一真正「MLX vs 非 MLX、其他不变」的干净对比是 gemma4 的 BF16 两个。
+
 ## 测试环境
 
 - **硬件**:MacBook Pro (Mac17,9) / Apple M5 Pro / 64 GB 统一内存

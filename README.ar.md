@@ -116,6 +116,32 @@ sudo pmset -a powermode 2
 
 جميع النماذج العشرة تفقد فقط **4–10%** من سرعة فك التشفير عند الانتقال من short → 11k رمز xlong. M5 Pro / 64 GB لديه هامش كبير لسياق 16k.
 
+<!-- mlx-caveat:v1 -->
+<div dir="rtl">
+
+## ⚠️ تنبيه حول مجموعة التحكم MLX — اقرأه قبل الاستشهاد بـ finding 3 و 4
+
+خمسة من النماذج العشرة المُختبرة هي متغيرات MLX (🍎):
+
+</div>
+
+- 🍎 `qwen3.6:27b-coding-mxfp8`
+- 🍎 `qwen3.6:27b-coding-nvfp4`
+- 🍎 `qwen3.6:35b-a3b-coding-mxfp8`
+- 🍎 `qwen3.6:35b-a3b-coding-nvfp4`
+- 🍎 `gemma4:e4b-mlx-bf16`
+
+<div dir="rtl">
+
+هذا يؤثر على كيفية قراءة finding 3 و 4 بدقة:
+
+- **Finding 3 (mxfp8 فخ)**: المقارنة هي 🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) مقابل غير-MLX `qwen3.6:27b` Q4_K_M (11.82 tok/s). البيان الدقيق: **مسار MLX mxfp8 على backend Metal لـ Ollama أبطأ من مسار GGUF Q4_K_M الأساسي**، رغم كونه أكبر بـ 1.8×.
+- **Finding 4 (علامة MLX لا تساعد فك التشفير لكنها تسرّع prefill)**: زوج gemma4 فقط يوفر مقارنة نظيفة «MLX مقابل غير-MLX، نفس BF16» (🍎 `gemma4:e4b-mlx-bf16` مقابل `gemma4:e4b-it-bf16`). أزواج qwen3.6 `-coding-mxfp8` / `-coding-nvfp4` *كلاهما* MLX، لذا فإن تناقض nvfp4-vs-mxfp8 هناك هو **مقارنة تكميم داخل MLX**، وليس عزلًا لمسار MLX نفسه.
+
+باختصار: 🍎 يميز متغيرات MLX، والزوج الوحيد حقًا «MLX مقابل غير-MLX، كل شيء آخر متساوٍ» في المجموعة هو زوج BF16 من gemma4.
+
+</div>
+
 ## بيئة الاختبار
 
 - **العتاد**: MacBook Pro (Mac17,9) / Apple M5 Pro / 64 GB ذاكرة موحدة

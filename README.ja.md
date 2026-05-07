@@ -102,6 +102,24 @@ sudo pmset -a powermode 2
 
 10 モデルすべてで short → 11k トークン xlong のデコード速度低下は **4–10%** のみ。Apple M5 Pro / 64 GB は 16k コンテキストでもまだ余裕がある。
 
+<!-- mlx-caveat:v1 -->
+## ⚠️ MLX コントロールグループの注意事項 — finding 3 / 4 を引用する前に必読
+
+10 個のテスト対象モデルのうち、5 個は MLX 変種(🍎)です:
+
+- 🍎 `qwen3.6:27b-coding-mxfp8`
+- 🍎 `qwen3.6:27b-coding-nvfp4`
+- 🍎 `qwen3.6:35b-a3b-coding-mxfp8`
+- 🍎 `qwen3.6:35b-a3b-coding-nvfp4`
+- 🍎 `gemma4:e4b-mlx-bf16`
+
+これは finding 3 / 4 の正確な読み方に影響します:
+
+- **Finding 3「mxfp8 は罠」**: 比較対象は 🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) vs 非 MLX の `qwen3.6:27b` Q4_K_M (11.82 tok/s)。正確な表現は: **Ollama Metal backend 上の MLX mxfp8 パスは base GGUF Q4_K_M パスより遅い**(ファイルは 1.8 倍大きいにもかかわらず)。
+- **Finding 4「MLX タグはデコードには効かないが、prefill が大幅向上」**: gemma4 のペアだけが「MLX vs 非 MLX、同じ BF16」のクリーンな比較(🍎 `gemma4:e4b-mlx-bf16` vs `gemma4:e4b-it-bf16`)。Qwen3.6 の `-coding-mxfp8` / `-coding-nvfp4` は *両方とも* MLX なので、そこでの nvfp4-vs-mxfp8 比較は **MLX 内部の量子化差**であり、MLX パス自体を分離した検証ではありません。
+
+要するに: 🍎 = MLX 変種; この実験で唯一の真の「MLX vs 非 MLX、他は同じ」のクリーンな比較は gemma4 の BF16 ペアです。
+
 ## テスト環境
 
 - **ハードウェア**:MacBook Pro (Mac17,9) / Apple M5 Pro / 64 GB ユニファイドメモリ

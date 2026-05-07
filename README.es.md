@@ -102,6 +102,24 @@ sudo pmset -a powermode 2
 
 Los 10 modelos pierden solo **4–10%** de velocidad de decodificación al pasar de short → 11k token xlong. M5 Pro / 64 GB tiene margen de sobra para 16k de contexto.
 
+<!-- mlx-caveat:v1 -->
+## ⚠️ Aviso sobre el grupo control de MLX — leer antes de citar findings 3 y 4
+
+Cinco de los diez modelos probados son variantes MLX (🍎):
+
+- 🍎 `qwen3.6:27b-coding-mxfp8`
+- 🍎 `qwen3.6:27b-coding-nvfp4`
+- 🍎 `qwen3.6:35b-a3b-coding-mxfp8`
+- 🍎 `qwen3.6:35b-a3b-coding-nvfp4`
+- 🍎 `gemma4:e4b-mlx-bf16`
+
+Esto afecta cómo deben leerse los findings 3 y 4:
+
+- **Finding 3 (mxfp8 es una trampa)**: la comparación es 🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) vs el no-MLX `qwen3.6:27b` Q4_K_M (11.82 tok/s). Enunciado preciso: **la ruta mxfp8 de MLX sobre el backend Metal de Ollama es más lenta que la ruta GGUF Q4_K_M base**, a pesar de ser 1.8× más grande.
+- **Finding 4 (la etiqueta MLX no ayuda al decode pero acelera prefill)**: solo el par gemma4 ofrece una comparación limpia "MLX vs no-MLX, mismo BF16" (🍎 `gemma4:e4b-mlx-bf16` vs `gemma4:e4b-it-bf16`). Los pares qwen3.6 `-coding-mxfp8` / `-coding-nvfp4` son *ambos* MLX, así que el contraste nvfp4-vs-mxfp8 allí es **una comparación de cuantización dentro de MLX**, no un aislamiento de la ruta MLX en sí.
+
+En resumen: 🍎 marca variantes MLX, y el único par verdaderamente "MLX vs no-MLX, todo lo demás igual" en la suite es el par BF16 de gemma4.
+
 ## Entorno de prueba
 
 - **Hardware**: MacBook Pro (Mac17,9) / Apple M5 Pro / 64 GB de memoria unificada

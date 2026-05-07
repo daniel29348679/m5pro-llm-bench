@@ -102,6 +102,24 @@ sudo pmset -a powermode 2
 
 10개 모델 모두 short → 11k 토큰 xlong 디코딩 속도 저하는 **4–10%** 에 불과. Apple M5 Pro / 64 GB 는 16k 컨텍스트에도 여유가 충분.
 
+<!-- mlx-caveat:v1 -->
+## ⚠️ MLX 대조군 정확한 설명 — finding 3 / 4 인용 전 필독
+
+10개 측정 모델 중 5개는 MLX 변형(🍎):
+
+- 🍎 `qwen3.6:27b-coding-mxfp8`
+- 🍎 `qwen3.6:27b-coding-nvfp4`
+- 🍎 `qwen3.6:35b-a3b-coding-mxfp8`
+- 🍎 `qwen3.6:35b-a3b-coding-nvfp4`
+- 🍎 `gemma4:e4b-mlx-bf16`
+
+이것이 finding 3 / 4 의 정확한 해석에 영향:
+
+- **Finding 3「mxfp8 은 함정」**: 비교 대상은 🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) vs 비 MLX `qwen3.6:27b` Q4_K_M (11.82 tok/s). 정확한 표현: **Ollama Metal backend 의 MLX mxfp8 경로가 base GGUF Q4_K_M 경로보다 느림** (파일은 1.8 배 큼에도 불구하고).
+- **Finding 4「MLX 태그는 디코딩에 도움 안 되지만 prefill 은 향상」**: gemma4 쌍만이 깨끗한 「MLX vs 비 MLX, 같은 BF16」 비교 (🍎 `gemma4:e4b-mlx-bf16` vs `gemma4:e4b-it-bf16`). Qwen3.6 의 `-coding-mxfp8` / `-coding-nvfp4` 는 *둘 다* MLX 이므로, 거기서의 nvfp4 vs mxfp8 비교는 **MLX 내부의 양자화 차이**일 뿐, MLX 경로 자체를 격리한 테스트가 아님.
+
+요약: 🍎 = MLX 변형; 이 스위트에서 유일한 진정한 「MLX vs 비 MLX, 나머지 동일」 깨끗한 비교는 gemma4 의 BF16 쌍.
+
 ## 테스트 환경
 
 - **하드웨어**: MacBook Pro (Mac17,9) / Apple M5 Pro / 64 GB 통합 메모리
