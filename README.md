@@ -15,36 +15,36 @@ The benchmark compares:
 - **MLX-tagged BF16 vs ordinary BF16** prefill performance
 - **macOS High Power mode** impact on throughput
 
-> **TL;DR**: On the current Ollama 0.30.6 setup, `qwen3.6:35b-a3b-mtp-q4_K_M` is the fastest installed Qwen model tested here: **83.65 / 84.74 / 76.68 tok/s** on short / long / xlong decode. MTP should stay at the model default `draft_num_predict=4`; forcing `8` was slower.
+> **TL;DR**: On the current Ollama 0.30.6 setup, `qwen3.6:35b-a3b-mtp-q4_K_M` is the fastest installed Qwen model tested here: **86.79 / 87.97 / 79.94 tok/s** on short / long / xlong decode after the same-server MTP retest. MTP should stay at the model default `draft_num_predict=4`; forcing `8` was slower.
 
 ## Current Results — Ollama 0.30.6
 
-After updating Ollama to **0.30.6**, the installed-model ranking changed. The current speed pick is the MTP MoE model:
+After updating Ollama to **0.30.6**, the installed-model ranking changed. MTP rows below use the same-condition draft-4 retest; non-MTP rows come from the installed-model run:
 
-| Model | Size | short gen | long gen | xlong gen | Change vs comparable baseline |
-|---|---:|---:|---:|---:|---|
-| `qwen3.6:35b-a3b-mtp-q4_K_M` | 22 GB | **83.65** | **84.74** | **76.68** | **+19-20%** vs prior MTP run |
-| `qwen3.6:35b-a3b-coding-nvfp4` | 21 GB | 64.57 | 64.58 | 59.15 | **-20%** vs original run2 |
-| `gemma4:26b-nvfp4` | 16 GB | 59.16 | 58.33 | 49.07 | New same-method baseline |
-| `qwen3.6:27b-mtp-q4_K_M` | 17 GB | 19.43 | 20.60 | 15.95 | Mostly flat; short +9.6% |
-| `gemma4:31b-nvfp4` | 20 GB | 10.41 | 10.27 | 9.14 | New same-method baseline; not a speed pick |
+| Model | Source | Size | short gen | long gen | xlong gen | Note |
+|---|---|---:|---:|---:|---:|---|
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | MTP retest, draft 4 | 22 GB | **86.79** | **87.97** | **79.94** | Current fastest |
+| `qwen3.6:35b-a3b-coding-nvfp4` | Installed-model run | 21 GB | 64.57 | 64.58 | 59.15 | **-20%** vs original run2 |
+| `gemma4:26b-nvfp4` | Installed-model run | 16 GB | 59.16 | 58.33 | 49.07 | New same-method baseline |
+| `qwen3.6:27b-mtp-q4_K_M` | MTP retest, draft 4 | 17 GB | 17.41 | 20.62 | 15.77 | Dense MTP draft-4 baseline |
+| `gemma4:31b-nvfp4` | Installed-model run | 20 GB | 10.41 | 10.27 | 9.14 | New same-method baseline; not a speed pick |
 
 **Current recommendation:** use `qwen3.6:35b-a3b-mtp-q4_K_M` for Qwen throughput on this machine. It now beats the previous fastest `qwen3.6:35b-a3b-coding-nvfp4` in the local Ollama 0.30.6 setup.
 
-Keep MTP `draft_num_predict` at the model default `4`. Forcing `draft_num_predict=8` was slower across both MTP models:
+Keep MTP `draft_num_predict` at the model default `4`. Retesting draft 4 vs 8 under the same Ollama 0.30.6 server showed that forcing `draft_num_predict=8` was slower across both MTP models:
 
-| Model | draft | short gen | long gen | xlong gen |
-|---|---:|---:|---:|---:|
-| `qwen3.6:35b-a3b-mtp-q4_K_M` | 4 | 69.75 | 70.57 | 64.29 |
-| `qwen3.6:35b-a3b-mtp-q4_K_M` | 8 | 36.67 | 46.66 | 40.72 |
-| `qwen3.6:27b-mtp-q4_K_M` | 4 | 17.72 | 20.37 | 15.93 |
-| `qwen3.6:27b-mtp-q4_K_M` | 8 | 9.44 | 12.61 | 8.97 |
+| Model | draft_num_predict | short gen | long gen | xlong gen | vs draft 4 |
+|---|---:|---:|---:|---:|---|
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | 4 | 86.79 | 87.97 | 79.94 | baseline |
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | 8 | 35.75 | 45.55 | 39.81 | -58.8% / -48.2% / -50.2% |
+| `qwen3.6:27b-mtp-q4_K_M` | 4 | 17.41 | 20.62 | 15.77 | baseline |
+| `qwen3.6:27b-mtp-q4_K_M` | 8 | 9.28 | 12.40 | 8.84 | -46.7% / -39.9% / -43.9% |
 
 Raw update results:
 
 - [Ollama 0.30.6 installed-model comparison](./results/ollama_0.30.6_update/installed/00_comparison.md)
-- [MTP default draft-4 baseline](./results/ollama_0.30.6_update/mtp_draft4/00_comparison.md)
-- [MTP draft-8 comparison](./results/ollama_0.30.6_update/mtp_draft8/00_comparison.md)
+- [Retested MTP draft-4 comparison](./results/ollama_0.30.6_update/mtp_draft4/00_comparison.md)
+- [Retested MTP draft-8 comparison](./results/ollama_0.30.6_update/mtp_draft8/00_comparison.md)
 
 ## Current Models Tested (5)
 
@@ -120,11 +120,11 @@ The original full-suite report tested 10 models and remains the best apples-to-a
 
 ### 1. Current Ollama 0.30.6 winner: Qwen3.6 35B-a3B MTP
 
-`qwen3.6:35b-a3b-mtp-q4_K_M` is the best current throughput result: **83.65 tok/s short**, **84.74 tok/s long**, and **76.68 tok/s xlong**. That is about **20% faster** than the earlier MTP baseline and faster than the older coding nvfp4 winner in this local setup.
+`qwen3.6:35b-a3b-mtp-q4_K_M` is the best current throughput result: **86.79 tok/s short**, **87.97 tok/s long**, and **79.94 tok/s xlong** in the same-server MTP draft-4 retest. It is faster than the older coding nvfp4 winner in this local setup.
 
 ### 2. MTP draft depth matters
 
-The MTP model default `draft_num_predict=4` is the right setting for these tests. `draft_num_predict=8` made both MTP models slower, by roughly **34-47%** depending on prompt length and model.
+The MTP model default `draft_num_predict=4` is the right setting for these tests. In the same-server retest, `draft_num_predict=8` was roughly **39.9-58.8% slower** depending on prompt length and model.
 
 ### 3. Decode and prefill have different bottlenecks
 
