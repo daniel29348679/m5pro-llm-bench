@@ -11,6 +11,27 @@ This repo benchmarks **10 local LLMs on Apple M5 Pro / 64 GB** via [Ollama](http
 
 > **TL;DR**: On M5 Pro, **model size > quantization > architecture optimization**. Decode is memory-bandwidth bound; prefill is quant-kernel bound — they follow completely different rules. See [REPORT.md](./REPORT.md) for full data.
 
+## 2026-06-07 Ollama 0.30.6 Update
+
+After updating Ollama from 0.24.0 to **0.30.6**, the installed-model ranking changed for the currently available models. The biggest improvement is the new MTP MoE model:
+
+| Model | Size | short gen | long gen | xlong gen | Change vs comparable baseline |
+|---|---:|---:|---:|---:|---|
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | 22 GB | **83.65** | **84.74** | **76.68** | **+19-20%** vs prior MTP run |
+| `qwen3.6:35b-a3b-coding-nvfp4` | 21 GB | 64.57 | 64.58 | 59.15 | **-20%** vs original run2 |
+| `gemma4:26b-nvfp4` | 16 GB | 59.16 | 58.33 | 49.07 | New same-method baseline |
+| `qwen3.6:27b-mtp-q4_K_M` | 17 GB | 19.43 | 20.60 | 15.95 | Mostly flat; short +9.6% |
+| `gemma4:31b-nvfp4` | 20 GB | 10.41 | 10.27 | 9.14 | New same-method baseline; not a speed pick |
+
+**Current recommendation:** use `qwen3.6:35b-a3b-mtp-q4_K_M` for Qwen throughput on this machine. It now beats the previous fastest `qwen3.6:35b-a3b-coding-nvfp4` in the local Ollama 0.30.6 setup. Keep MTP `draft_num_predict` at the model default `4`; a separate draft-8 run was slower across both MTP models.
+
+Raw update results:
+
+- [Ollama 0.30.6 installed-model comparison](./results/ollama_0.30.6_update/installed/00_comparison.md)
+- [MTP default draft-4 baseline](./results/ollama_0.30.6_update/mtp_draft4/00_comparison.md)
+- [MTP draft-8 comparison](./results/ollama_0.30.6_update/mtp_draft8/00_comparison.md)
+
+
 ## Models tested (10)
 
 | Family | Model | Params | Quant | File size |
