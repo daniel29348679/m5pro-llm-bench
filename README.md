@@ -46,6 +46,18 @@ Raw update results:
 - [MTP default draft-4 baseline](./results/ollama_0.30.6_update/mtp_draft4/00_comparison.md)
 - [MTP draft-8 comparison](./results/ollama_0.30.6_update/mtp_draft8/00_comparison.md)
 
+## Current Models Tested (5)
+
+These are the models actually installed and tested in the Ollama 0.30.6 update:
+
+| Family | Model | Params | Quant | File size | Notes |
+|---|---|---|---|---:|---|
+| Qwen3.6 | `qwen3.6:35b-a3b-mtp-q4_K_M` | 35.5B MoE | Q4_K_M + MTP | 22 GB | Current fastest Qwen result |
+| Qwen3.6 | `qwen3.6:27b-mtp-q4_K_M` | 27.3B dense | Q4_K_M + MTP | 17 GB | MTP dense 27B baseline |
+| Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE | nvfp4 | 21 GB | Historical winner, slower in 0.30.6 run |
+| Gemma4 | `gemma4:26b-nvfp4` | 6.3B | nvfp4 | 16 GB | New same-method baseline |
+| Gemma4 | `gemma4:31b-nvfp4` | 31.3B | nvfp4 | 20 GB | Not a speed pick |
+
 ## What Changed
 
 - The **current fastest local model** in this repo is now `qwen3.6:35b-a3b-mtp-q4_K_M` on Ollama 0.30.6.
@@ -57,7 +69,7 @@ Raw update results:
 
 The original full-suite report tested 10 models and remains the best apples-to-apples comparison for quantization, MLX tagging, and dense-vs-MoE behavior. See [REPORT.md](./REPORT.md) for the detailed historical report.
 
-### Models tested (10)
+### Historical Models Tested (10)
 
 | Family | Model | Params | Quant | File size |
 |---|---|---|---|---:|
