@@ -1,272 +1,78 @@
-# M5 Pro LLM Benchmark — Ollama 0.30.6, MTP, MLX, and Quantization
+# M5 Pro LLM Benchmark — Ollama 0.30.6 Model Picks
 
 **Languages**: **English** · [繁體中文](./README.zh-Hant.md) · [简体中文](./README.zh-Hans.md) · [日本語](./README.ja.md) · [한국어](./README.ko.md) · [Español](./README.es.md) · [Français](./README.fr.md) · [Deutsch](./README.de.md) · [Русский](./README.ru.md) · [Português](./README.pt.md) · [العربية](./README.ar.md) · [हिन्दी](./README.hi.md)
 
-This repo benchmarks local LLM throughput on **Apple M5 Pro / 64 GB** via [Ollama](https://ollama.com). It contains two data sets:
+This repo benchmarks local LLM throughput on **Apple M5 Pro / 64 GB** with [Ollama](https://ollama.com). The current results use **Ollama 0.30.6** and the models installed on this machine; the older 10-model suite is kept as historical evidence in [REPORT.md](./REPORT.md).
 
-- **Current update**: Ollama **0.30.6** installed-model run, including Qwen3.6 MTP models and draft-depth checks.
-- **Historical full suite**: the original 10-model Ollama run covering Qwen3.6, Gemma4, MLX-tagged models, and quantization formats.
+## Quick Pick
 
-The benchmark compares:
+| Situation | Pick | Reason |
+|---|---|---|
+| Fastest current local Qwen model | `qwen3.6:35b-a3b-mtp-q4_K_M` with `draft_num_predict=4` | Best measured decode speed: up to **87.97 tokens/s** |
+| You want a Gemma model | `gemma4:26b-nvfp4` | Best current Gemma speed in the installed-model run |
+| You need the smaller Qwen MTP model | `qwen3.6:27b-mtp-q4_K_M` with `draft_num_predict=4` | Smaller 17 GB file, but much slower than the 35B-a3B MTP model |
+| You are tuning MTP | Keep the model default `draft_num_predict=4` | Forcing `8` was slower on both MTP models |
+| You only care about old full-suite comparisons | Read [REPORT.md](./REPORT.md) | Best source for the original 10-model quantization and MLX comparisons |
 
-- **MoE vs dense** decode speed (Qwen3.6 35b-a3b vs 35b dense)
-- **MTP draft settings** (`draft_num_predict=4` default vs `8`)
-- **Quantization formats** for prefill vs decode (Q4_K_M / mxfp8 / nvfp4 / BF16)
-- **MLX-tagged BF16 vs ordinary BF16** prefill performance
-- **macOS High Power mode** impact on throughput
+## Current Results
 
-> **TL;DR**: On the current Ollama 0.30.6 setup, `qwen3.6:35b-a3b-mtp-q4_K_M` is the fastest installed Qwen model tested here: **86.79 / 87.97 / 79.94 tok/s** on short / long / xlong decode after the same-server MTP retest. MTP should stay at the model default `draft_num_predict=4`; forcing `8` was slower.
-
-## Current Results — Ollama 0.30.6
-
-After updating Ollama to **0.30.6**, the installed-model ranking changed. MTP rows below use the same-condition draft-4 retest; non-MTP rows come from the installed-model run:
-
-| Model | Source | Size | short gen | long gen | xlong gen | Note |
+| Model | Best use | Model file size (GB) | Short decode (tokens/s) | Long decode (tokens/s) | 11k-context decode (tokens/s) | Data source |
 |---|---|---:|---:|---:|---:|---|
-| `qwen3.6:35b-a3b-mtp-q4_K_M` | MTP retest, draft 4 | 22 GB | **86.79** | **87.97** | **79.94** | Current fastest |
-| `qwen3.6:35b-a3b-coding-nvfp4` | Installed-model run | 21 GB | 64.57 | 64.58 | 59.15 | **-20%** vs original run2 |
-| `gemma4:26b-nvfp4` | Installed-model run | 16 GB | 59.16 | 58.33 | 49.07 | New same-method baseline |
-| `qwen3.6:27b-mtp-q4_K_M` | MTP retest, draft 4 | 17 GB | 17.41 | 20.62 | 15.77 | Dense MTP draft-4 baseline |
-| `gemma4:31b-nvfp4` | Installed-model run | 20 GB | 10.41 | 10.27 | 9.14 | New same-method baseline; not a speed pick |
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | Fastest current Qwen | 22 | **86.79** | **87.97** | **79.94** | MTP retest, draft 4 |
+| `qwen3.6:35b-a3b-coding-nvfp4` | Non-MTP Qwen fallback | 21 | 64.57 | 64.58 | 59.15 | Installed-model run |
+| `gemma4:26b-nvfp4` | Fastest current Gemma | 16 | 59.16 | 58.33 | 49.07 | Installed-model run |
+| `qwen3.6:27b-mtp-q4_K_M` | Smaller Qwen MTP baseline | 17 | 17.41 | 20.62 | 15.77 | MTP retest, draft 4 |
+| `gemma4:31b-nvfp4` | Not a speed pick | 20 | 10.41 | 10.27 | 9.14 | Installed-model run |
 
-**Current recommendation:** use `qwen3.6:35b-a3b-mtp-q4_K_M` for Qwen throughput on this machine. It now beats the previous fastest `qwen3.6:35b-a3b-coding-nvfp4` in the local Ollama 0.30.6 setup.
+## MTP Draft Tokens
 
-Keep MTP `draft_num_predict` at the model default `4`. Retesting draft 4 vs 8 under the same Ollama 0.30.6 server showed that forcing `draft_num_predict=8` was slower across both MTP models:
-
-| Model | draft_num_predict | short gen | long gen | xlong gen | vs draft 4 |
+| Model | MTP draft tokens (`draft_num_predict`) | Short decode (tokens/s) | Long decode (tokens/s) | 11k-context decode (tokens/s) | Change vs draft 4 |
 |---|---:|---:|---:|---:|---|
 | `qwen3.6:35b-a3b-mtp-q4_K_M` | 4 | 86.79 | 87.97 | 79.94 | baseline |
 | `qwen3.6:35b-a3b-mtp-q4_K_M` | 8 | 35.75 | 45.55 | 39.81 | -58.8% / -48.2% / -50.2% |
 | `qwen3.6:27b-mtp-q4_K_M` | 4 | 17.41 | 20.62 | 15.77 | baseline |
 | `qwen3.6:27b-mtp-q4_K_M` | 8 | 9.28 | 12.40 | 8.84 | -46.7% / -39.9% / -43.9% |
 
-Raw update results:
+**MTP conclusion:** do not force `draft_num_predict=8` on this machine. Use the model default `4`.
+
+## Models Tested In The Current Update
+
+| Family | Model | Parameters | Quantization | Model file size (GB) | Notes |
+|---|---|---|---|---:|---|
+| Qwen3.6 | `qwen3.6:35b-a3b-mtp-q4_K_M` | 35.5B MoE | Q4_K_M + MTP | 22 | Current winner |
+| Qwen3.6 | `qwen3.6:27b-mtp-q4_K_M` | 27.3B dense | Q4_K_M + MTP | 17 | Smaller MTP baseline |
+| Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE | nvfp4 | 21 | Historical winner, slower in current run |
+| Gemma4 | `gemma4:26b-nvfp4` | 6.3B | nvfp4 | 16 | Best current Gemma result |
+| Gemma4 | `gemma4:31b-nvfp4` | 31.3B | nvfp4 | 20 | Slow in this run |
+
+## Benchmark Shape
+
+| Case | Prompt length (tokens) | Generation limit (`num_predict`, tokens) | Samples |
+|---|---:|---:|---:|
+| Short | 26-32 | 256 | 5 |
+| Long | 149-156 | 512 | 4 |
+| 11k context | about 11,000 with `num_ctx=16384` | 256 | 3 |
+
+Decode speed is Ollama's server-reported `eval_count / eval_duration`. High Power mode was locked with `pmset powermode=2`, and `caffeinate -dimsu` was used during the runs.
+
+## Historical Notes
+
+The original full suite tested 10 models on Ollama 0.21/run2. Keep using it for architecture, quantization, and MLX comparisons:
+
+| Historical finding | Result |
+|---|---|
+| Best old short-decode result | `qwen3.6:35b-a3b-coding-nvfp4` at **80.61 tokens/s** |
+| Best old 11k cold-prefill result | `gemma4:e4b-nvfp4` at **4205.55 tokens/s** |
+| Apple Silicon warning | `mxfp8` was slower than Q4_K_M despite larger files |
+| MLX warning | MLX helped prefill, not decode, in the clean Gemma BF16 pair |
+
+## Raw Results
 
 - [Ollama 0.30.6 installed-model comparison](./results/ollama_0.30.6_update/installed/00_comparison.md)
 - [Retested MTP draft-4 comparison](./results/ollama_0.30.6_update/mtp_draft4/00_comparison.md)
 - [Retested MTP draft-8 comparison](./results/ollama_0.30.6_update/mtp_draft8/00_comparison.md)
+- [Historical 10-model report](./REPORT.md)
 
-## Current Models Tested (5)
+## Final Decision
 
-These are the models actually installed and tested in the Ollama 0.30.6 update:
-
-| Family | Model | Params | Quant | File size | Notes |
-|---|---|---|---|---:|---|
-| Qwen3.6 | `qwen3.6:35b-a3b-mtp-q4_K_M` | 35.5B MoE | Q4_K_M + MTP | 22 GB | Current fastest Qwen result |
-| Qwen3.6 | `qwen3.6:27b-mtp-q4_K_M` | 27.3B dense | Q4_K_M + MTP | 17 GB | MTP dense 27B baseline |
-| Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE | nvfp4 | 21 GB | Historical winner, slower in 0.30.6 run |
-| Gemma4 | `gemma4:26b-nvfp4` | 6.3B | nvfp4 | 16 GB | New same-method baseline |
-| Gemma4 | `gemma4:31b-nvfp4` | 31.3B | nvfp4 | 20 GB | Not a speed pick |
-
-## What Changed
-
-- The **current fastest local model** in this repo is now `qwen3.6:35b-a3b-mtp-q4_K_M` on Ollama 0.30.6.
-- The older `qwen3.6:35b-a3b-coding-nvfp4` result remains useful as a historical baseline, but it regressed by about **20%** under the current 0.30.6 installed-model run.
-- `qwen3.6:27b-mtp-q4_K_M` improved mostly on short prompts; long and xlong were effectively flat.
-- `gemma4:26b-nvfp4` and `gemma4:31b-nvfp4` are new same-method baselines in this update. The 31B nvfp4 model is not a throughput pick.
-
-## Historical Full Suite — Ollama 0.21/run2
-
-The original full-suite report tested 10 models and remains the best apples-to-apples comparison for quantization, MLX tagging, and dense-vs-MoE behavior. See [REPORT.md](./REPORT.md) for the detailed historical report.
-
-### Historical Models Tested (10)
-
-| Family | Model | Params | Quant | File size |
-|---|---|---|---|---:|
-| Qwen3.6 | `qwen3.6:35b` | 36.0B dense | Q4_K_M | 23 GB |
-| Qwen3.6 | `qwen3.6:27b` | 27.8B dense | Q4_K_M | 17 GB |
-| Qwen3.6 | 🍎 `qwen3.6:27b-coding-mxfp8` | 27.4B dense | mxfp8 | 31 GB |
-| Qwen3.6 | 🍎 `qwen3.6:27b-coding-nvfp4` | 27.4B dense | nvfp4 | 19 GB |
-| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 35.1B MoE (3B active) | mxfp8 | 37 GB |
-| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B active) | nvfp4 | 21 GB |
-| Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 GB |
-| Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 GB |
-| Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 GB |
-| Gemma4 | `gemma4:e4b-nvfp4` | 8.0B dense | nvfp4 | 9.6 GB |
-
-### Historical Top Results
-
-#### Short-prompt decode speed (mean of 5 samples)
-
-| Rank | Model | tok/s |
-|---:|---|---:|
-| 1 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | **80.61** |
-| 2 | `gemma4:e4b-nvfp4` | **69.34** |
-| 3 | `gemma4:e4b` | 68.56 |
-| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
-| 5 | `qwen3.6:35b` | 41.68 |
-| 6 | `gemma4:e4b-it-bf16` | 28.42 |
-| 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
-| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 16.34 |
-| 9 | `qwen3.6:27b` | 11.82 |
-| 10 | 🍎 `qwen3.6:27b-coding-mxfp8` | 9.89 |
-
-#### xlong (~11k token) cold-prefill speed
-
-| Rank | Model | prefill tok/s |
-|---:|---|---:|
-| 1 | `gemma4:e4b-nvfp4` | **4205.55** |
-| 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
-| 3 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
-| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
-| 5 | `gemma4:e4b-it-bf16` | 782.36 |
-| 6 | `gemma4:e4b` | 736.34 |
-| 7 | `qwen3.6:35b` | 562.50 |
-| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 455.78 |
-| 9 | 🍎 `qwen3.6:27b-coding-mxfp8` | 413.21 |
-| 10 | `qwen3.6:27b` | 116.00 |
-
-## Key Findings
-
-### 1. Current Ollama 0.30.6 winner: Qwen3.6 35B-a3B MTP
-
-`qwen3.6:35b-a3b-mtp-q4_K_M` is the best current throughput result: **86.79 tok/s short**, **87.97 tok/s long**, and **79.94 tok/s xlong** in the same-server MTP draft-4 retest. It is faster than the older coding nvfp4 winner in this local setup.
-
-### 2. MTP draft depth matters
-
-The MTP model default `draft_num_predict=4` is the right setting for these tests. In the same-server retest, `draft_num_predict=8` was roughly **39.9-58.8% slower** depending on prompt length and model.
-
-### 3. Decode and prefill have different bottlenecks
-
-- **Decode is usually memory-bandwidth bound**: weights traverse memory once per token. In the historical Gemma4 suite, 4-bit variants decode at ~68 tok/s while BF16 variants decode at ~28 tok/s.
-- **Prefill is compute and quant-kernel bound**: in the historical suite, `gemma4:e4b-nvfp4` has similar decode speed to `gemma4:e4b`, but cold xlong prefill is **5.7x faster** (4206 vs 736 tok/s).
-
-### 4. nvfp4 is strong, but not universally best across Ollama versions
-
-In the historical full suite, nvfp4 was the best all-round format within matching architecture families. Under the current Ollama 0.30.6 installed-model run, however, `qwen3.6:35b-a3b-coding-nvfp4` regressed by about **20%**, while the new MTP Q4_K_M MoE model became the top Qwen throughput choice.
-
-Practical rule: prefer nvfp4 when it is the best same-architecture option, but verify against current Ollama/runtime versions before treating it as universal.
-
-### 5. mxfp8 is a trap on Apple Silicon
-
-🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) is **slower than the original Q4_K_M (11.82 tok/s)** despite being 1.8× larger — mxfp8 has no native Metal backend acceleration.
-
-### 6. The "MLX" tag doesn't help decode but accelerates prefill ~5x
-
-🍎 `gemma4:e4b-mlx-bf16` and `gemma4:e4b-it-bf16` decode identically at ~28 tok/s, but cold xlong prefill is **3721 vs 782 tok/s (4.8×)**. Pick MLX variants only when long prompts dominate.
-
-### 7. MoE pays off on M5 Pro
-
-MoE only walks the active experts through memory per token. That is why both historical and current Qwen3.6 MoE models dominate dense 27B/35B decode speed on this machine.
-
-### 8. macOS power mode is decisive for dense models
-
-| Model | Automatic (run1) | High Power (run2) | Δ |
-|---|---:|---:|---:|
-| `qwen3.6:35b` | 27.36 | 41.68 | +52% |
-| `qwen3.6:27b` | 6.24 | 11.82 | +89% |
-| 🍎 `qwen3.6:27b-coding-mxfp8` | 5.27 | 9.89 | +88% |
-| 🍎 `qwen3.6:27b-coding-nvfp4` | 16.32 | 16.34 | +0% |
-
-**Reproducible benchmarks must lock High Power**:
-
-```bash
-sudo pmset -a powermode 2
-```
-
-### 9. 16k long-context penalty is small
-
-All 10 models lose only **4–10%** decode speed going from short → 11k-token xlong. M5 Pro / 64 GB has plenty of headroom for 16k context.
-
-<!-- mlx-caveat:v1 -->
-## ⚠️ MLX control-group caveat — read before citing findings 3 & 4
-
-Five of the ten benchmarked models are MLX variants (🍎):
-
-- 🍎 `qwen3.6:27b-coding-mxfp8`
-- 🍎 `qwen3.6:27b-coding-nvfp4`
-- 🍎 `qwen3.6:35b-a3b-coding-mxfp8`
-- 🍎 `qwen3.6:35b-a3b-coding-nvfp4`
-- 🍎 `gemma4:e4b-mlx-bf16`
-
-This affects how findings 3 and 4 should be read:
-
-- **Finding 3 (mxfp8 is a trap)**: the comparison is 🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) vs non-MLX `qwen3.6:27b` Q4_K_M (11.82 tok/s). Precise statement: **the MLX mxfp8 path on Ollama's Metal backend is slower than the base-GGUF Q4_K_M path**, despite being 1.8× larger.
-- **Finding 4 (MLX tag doesn't help decode but boosts prefill)**: only the gemma4 pair has a clean MLX vs non-MLX BF16 comparison (🍎 `gemma4:e4b-mlx-bf16` vs `gemma4:e4b-it-bf16`). The qwen3.6 `-coding-mxfp8` / `-coding-nvfp4` pairs are *both* MLX, so the nvfp4-vs-mxfp8 contrast there is **a quantization comparison within MLX**, not an isolation of the MLX path itself.
-
-In short: 🍎 marks MLX variants, and the only true "MLX vs non-MLX, all else equal" pair in the suite is the gemma4 BF16 pair.
-
-## Test environment
-
-- **Hardware**: MacBook Pro (Mac17,9) / Apple M5 Pro / 64 GB unified memory
-- **Current update OS**: Darwin 25.6.0
-- **Current update Ollama**: v0.30.6
-- **Historical full-suite OS**: Darwin 25.5.0
-- **Historical full-suite Ollama**: v0.21.0
-- **Power**: AC, `pmset powermode=2` (High Power)
-- **No-sleep**: `caffeinate -dimsu` throughout
-- **Python**: 3.14
-
-## Methodology
-
-See [`bench.py`](./bench.py). Key design:
-
-- For each model: `keep_alive=0` unload → cold-start → warmup → measure
-- All runs use `temperature=0` `seed=42` `keep_alive=10m` for reproducibility
-- Three prompt lengths:
-  - **short** × 5: 26~32-token prompt → `num_predict=256`
-  - **long** × 4: 149~156-token prompt → `num_predict=512`
-  - **xlong** × 3: ~11k-token prompt → `num_predict=256`, forced `num_ctx=16384`
-- Decode tok/s = server-reported `eval_count / eval_duration`. **Not affected by KV cache hits.**
-- Prefill tok/s only takes the **first run** of long/xlong (cold prefill) — Ollama reuses KV cache for repeated prompts and inflates subsequent prefill numbers absurdly (100k+ tok/s).
-
-## Reproduce
-
-```bash
-# 1. Lock High Power
-sudo pmset -a powermode 2
-
-# 2. Verify ollama
-curl -s http://localhost:11434/api/version
-
-# 3. Pull models
-for m in qwen3.6:35b qwen3.6:27b qwen3.6:27b-coding-mxfp8 \
-         qwen3.6:27b-coding-nvfp4 qwen3.6:35b-a3b-coding-mxfp8 \
-         qwen3.6:35b-a3b-coding-nvfp4 \
-         gemma4:e4b gemma4:e4b-it-bf16 gemma4:e4b-mlx-bf16 gemma4:e4b-nvfp4; do
-  ollama pull "$m"
-done
-
-# 4. Run benchmark (no-sleep + measure)
-caffeinate -dimsu -t 18000 &
-python3 bench.py \
-  --models qwen3.6:35b qwen3.6:27b qwen3.6:27b-coding-mxfp8 \
-           qwen3.6:27b-coding-nvfp4 qwen3.6:35b-a3b-coding-mxfp8 \
-           qwen3.6:35b-a3b-coding-nvfp4 \
-           gemma4:e4b gemma4:e4b-it-bf16 gemma4:e4b-mlx-bf16 gemma4:e4b-nvfp4 \
-  --output-dir results \
-  --short-runs 5 --long-runs 4 --xlong-runs 3 \
-  --short-predict 256 --long-predict 512 --xlong-predict 256 \
-  --xlong-num-ctx 16384
-
-# 5. Render report
-python3 render_report.py
-```
-
-## Repo layout
-
-```
-m5pro-llm-bench/
-├── README.md / README.<lang>.md   # This file in 12 languages
-├── REPORT.md                       # Full comparison report
-├── bench.py                        # Measurement script
-├── render_report.py                # Post-processor (results/*.json → REPORT.md)
-└── results/
-    ├── qwen3.6_*.json / .md        # Historical 6 Qwen3.6 models
-    ├── gemma4_*.json / .md         # Historical 4 Gemma4 models
-    └── ollama_0.30.6_update/       # Current update raw results
-```
-
-## Known measurement caveats
-
-- **Gemma4 short-prompt TTFT is high (1.6–5.7 s)**: out of proportion with prefill time (32 / ~1400 ≈ 0.02 s). Likely Ollama-side gemma3-style chat-template processing.
-- **Gemma4 xlong TTFT shows 0.00 s — client-side streaming detection bug**: gemma4's first stream chunk lacks `response`/`thinking` strings, so the client's first-token detector never fires. Use `xlong wall - eval_count / xlong_gen` to back out actual TTFT.
-- **Ollama KV-cache reuse**: identical prompts on the 2nd run inflate `prompt_eval` numbers ridiculously. The report only takes cold prefill (run 1).
-
-## License
-
-CC BY-SA 4.0. Cite, modify, redistribute freely with attribution.
-
-## Contributing
-
-Other M5 Pro owners running additional models (Llama 3.3, DeepSeek, Phi 4, …) are welcome to open a PR or issue. If you have different hardware (M4 / M3 Max / Studio), a matching dataset would be very valuable.
+Use `qwen3.6:35b-a3b-mtp-q4_K_M` with the default `draft_num_predict=4` unless you have a specific reason not to. Choose `gemma4:26b-nvfp4` only when you specifically want Gemma. Choose `qwen3.6:27b-mtp-q4_K_M` only when the smaller 17 GB Qwen file matters more than speed. Do not force MTP draft tokens to `8`.
