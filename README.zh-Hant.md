@@ -1,205 +1,78 @@
-# M5 Pro LLM Benchmark — Ollama、MLX 與量化的影響
+# M5 Pro LLM Benchmark — Ollama 0.30.6 模型選擇
 
 **Languages**: [English](./README.md) · **繁體中文** · [简体中文](./README.zh-Hans.md) · [日本語](./README.ja.md) · [한국어](./README.ko.md) · [Español](./README.es.md) · [Français](./README.fr.md) · [Deutsch](./README.de.md) · [Русский](./README.ru.md) · [Português](./README.pt.md) · [العربية](./README.ar.md) · [हिन्दी](./README.hi.md)
 
-這個 repo 量測 **Apple M5 Pro / 64 GB** 在 [Ollama](https://ollama.com) 上跑 10 個本地 LLM 的速度,重點比較:
+這個 repo 測試 **Apple M5 Pro / 64 GB** 在 [Ollama](https://ollama.com) 上跑本地 LLM 的吞吐量。目前結果使用 **Ollama 0.30.6** 與這台機器上已安裝的模型；舊的 10 模型完整測試保留在 [REPORT.md](./REPORT.md) 作為歷史資料。
 
-- **MoE 對 dense** 的解碼速度差距(Qwen3.6 35b-a3b vs 35b dense)
-- **量化格式**對 prefill 與解碼的不同影響(Q4_K_M / mxfp8 / nvfp4 / BF16)
-- **MLX 變體 vs 一般 BF16** 在 Ollama 上的 prefill 差距
-- **macOS High Power 模式**對效能的決定性影響
+## 快速選擇
 
-> **TL;DR**:在 M5 Pro 上跑這些模型,**模型大小 > 量化格式 > 架構優化**;解碼受記憶體頻寬綁住、prefill 受 quant kernel 綁住,兩者規律完全不同。詳細數據看 [REPORT.md](./REPORT.md)。
+| 情況 | 直接選 | 原因 |
+|---|---|---|
+| 目前最快的本地 Qwen | `qwen3.6:35b-a3b-mtp-q4_K_M`，`draft_num_predict=4` | 最高實測解碼速度到 **87.97 tokens/s** |
+| 你要用 Gemma | `gemma4:26b-nvfp4` | 目前已安裝 Gemma 裡速度最好 |
+| 你需要較小的 Qwen MTP | `qwen3.6:27b-mtp-q4_K_M`，`draft_num_predict=4` | 模型檔 17 GB，但比 35B-a3B MTP 慢很多 |
+| 你在調 MTP | 保持模型預設 `draft_num_predict=4` | 強制改成 `8` 兩個 MTP 模型都變慢 |
+| 你只看舊完整比較 | 看 [REPORT.md](./REPORT.md) | 原始 10 模型量化與 MLX 比較在那裡 |
 
-## 受測模型(10 個)
+## 目前結果
 
-| 系列 | 模型 | 參數 | 量化 | 模型檔大小 |
-|---|---|---|---|---:|
-| Qwen3.6 | `qwen3.6:35b` | 36.0B dense | Q4_K_M | 23 GB |
-| Qwen3.6 | `qwen3.6:27b` | 27.8B dense | Q4_K_M | 17 GB |
-| Qwen3.6 | 🍎 `qwen3.6:27b-coding-mxfp8` | 27.4B dense | mxfp8 | 31 GB |
-| Qwen3.6 | 🍎 `qwen3.6:27b-coding-nvfp4` | 27.4B dense | nvfp4 | 19 GB |
-| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 35.1B MoE (3B active) | mxfp8 | 37 GB |
-| Qwen3.6 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE (3B active) | nvfp4 | 21 GB |
-| Gemma4 | `gemma4:e4b` | 8.0B dense | Q4_K_M | 9.6 GB |
-| Gemma4 | `gemma4:e4b-it-bf16` | 8.0B dense | BF16 | 16 GB |
-| Gemma4 | 🍎 `gemma4:e4b-mlx-bf16` | 8.0B dense | BF16 (MLX) | 16 GB |
-| Gemma4 | `gemma4:e4b-nvfp4` | 8.0B dense | nvfp4 | 9.6 GB |
+| 模型 | 最適合用途 | 模型檔大小 (GB) | 短輸出解碼 (tokens/s) | 長輸出解碼 (tokens/s) | 11k 上下文解碼 (tokens/s) | 資料來源 |
+|---|---|---:|---:|---:|---:|---|
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | 目前最快 Qwen | 22 | **86.79** | **87.97** | **79.94** | MTP 重測，draft 4 |
+| `qwen3.6:35b-a3b-coding-nvfp4` | 非 MTP Qwen 備選 | 21 | 64.57 | 64.58 | 59.15 | 已安裝模型測試 |
+| `gemma4:26b-nvfp4` | 目前最快 Gemma | 16 | 59.16 | 58.33 | 49.07 | 已安裝模型測試 |
+| `qwen3.6:27b-mtp-q4_K_M` | 較小 Qwen MTP baseline | 17 | 17.41 | 20.62 | 15.77 | MTP 重測，draft 4 |
+| `gemma4:31b-nvfp4` | 不建議當速度首選 | 20 | 10.41 | 10.27 | 9.14 | 已安裝模型測試 |
 
-## 主要結果
+## MTP 預測 tokens
 
-### Short prompt 解碼速度排名(5 次取樣平均)
+| 模型 | MTP 預測 tokens (`draft_num_predict`) | 短輸出解碼 (tokens/s) | 長輸出解碼 (tokens/s) | 11k 上下文解碼 (tokens/s) | 相對 draft 4 |
+|---|---:|---:|---:|---:|---|
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | 4 | 86.79 | 87.97 | 79.94 | baseline |
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | 8 | 35.75 | 45.55 | 39.81 | -58.8% / -48.2% / -50.2% |
+| `qwen3.6:27b-mtp-q4_K_M` | 4 | 17.41 | 20.62 | 15.77 | baseline |
+| `qwen3.6:27b-mtp-q4_K_M` | 8 | 9.28 | 12.40 | 8.84 | -46.7% / -39.9% / -43.9% |
 
-| 排名 | 模型 | tok/s |
-|---:|---|---:|
-| 1 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | **80.61** |
-| 2 | `gemma4:e4b-nvfp4` | **69.34** |
-| 3 | `gemma4:e4b` | 68.56 |
-| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 60.41 |
-| 5 | `qwen3.6:35b` | 41.68 |
-| 6 | `gemma4:e4b-it-bf16` | 28.42 |
-| 7 | 🍎 `gemma4:e4b-mlx-bf16` | 28.01 |
-| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 16.34 |
-| 9 | `qwen3.6:27b` | 11.82 |
-| 10 | 🍎 `qwen3.6:27b-coding-mxfp8` | 9.89 |
+**MTP 結論：**這台機器不要強制 `draft_num_predict=8`，用模型預設 `4`。
 
-### xlong(11k tokens)冷啟 prefill 速度排名
+## 目前更新實測模型
 
-| 排名 | 模型 | prefill tok/s |
-|---:|---|---:|
-| 1 | `gemma4:e4b-nvfp4` | **4205.55** |
-| 2 | 🍎 `gemma4:e4b-mlx-bf16` | **3721.14** |
-| 3 | 🍎 `qwen3.6:35b-a3b-coding-nvfp4` | 2057.40 |
-| 4 | 🍎 `qwen3.6:35b-a3b-coding-mxfp8` | 1908.08 |
-| 5 | `gemma4:e4b-it-bf16` | 782.36 |
-| 6 | `gemma4:e4b` | 736.34 |
-| 7 | `qwen3.6:35b` | 562.50 |
-| 8 | 🍎 `qwen3.6:27b-coding-nvfp4` | 455.78 |
-| 9 | 🍎 `qwen3.6:27b-coding-mxfp8` | 413.21 |
-| 10 | `qwen3.6:27b` | 116.00 |
+| 系列 | 模型 | 參數 | 量化 | 模型檔大小 (GB) | 備註 |
+|---|---|---|---|---:|---|
+| Qwen3.6 | `qwen3.6:35b-a3b-mtp-q4_K_M` | 35.5B MoE | Q4_K_M + MTP | 22 | 目前贏家 |
+| Qwen3.6 | `qwen3.6:27b-mtp-q4_K_M` | 27.3B dense | Q4_K_M + MTP | 17 | 較小 MTP baseline |
+| Qwen3.6 | `qwen3.6:35b-a3b-coding-nvfp4` | 35.1B MoE | nvfp4 | 21 | 歷史贏家，目前 run 較慢 |
+| Gemma4 | `gemma4:26b-nvfp4` | 6.3B | nvfp4 | 16 | 目前 Gemma 最佳結果 |
+| Gemma4 | `gemma4:31b-nvfp4` | 31.3B | nvfp4 | 20 | 這次速度慢 |
 
-## 重點發現
+## 測試形狀
 
-### 1. 解碼 vs Prefill 的瓶頸不同
-
-- **解碼受記憶體頻寬綁住**:模型 weights 每生成一個 token 就要走過記憶體一次。Gemma4 e4b 的 4-bit (e4b, e4b-nvfp4) 都是 ~68 tok/s;BF16 (it-bf16, mlx-bf16) 都是 ~28 tok/s。**慢 2.4 倍剛好對應 weight 大小 2 倍**。
-- **Prefill 受 compute 與 quant kernel 綁住**:同樣 4-bit、同樣 9.6 GB 的 e4b vs e4b-nvfp4 解碼幾乎相同,但 nvfp4 的 cold xlong prefill **快 5.7 倍**(4206 vs 736 tok/s)。
-
-### 2. nvfp4 是這台 M5 Pro 上的全方位贏家
-
-- 同架構下 nvfp4 解碼 +33%~+65%、模型檔小 39%~43%。
-- 在 Gemma4 上 nvfp4 對解碼幾乎沒幫助,但 prefill 快 5x 級別。
-- 結論:**只要有 nvfp4 版就選 nvfp4**。
-
-### 3. mxfp8 在 Apple Silicon 是地雷
-
-🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) **比原版 Q4_K_M (11.82 tok/s) 還慢**,且檔案大 1.8 倍——mxfp8 在 Metal backend 上沒有原生加速。
-
-### 4. MLX 標籤對解碼沒用,但 prefill 大幅領先
-
-🍎 `gemma4:e4b-mlx-bf16` 與 `gemma4:e4b-it-bf16` 解碼都是 ~28 tok/s,但 cold xlong prefill 是 **3721 vs 782 tok/s(4.8 倍)**。長 prompt 場景優先選 MLX 變體;短 prompt 完全沒差。
-
-### 5. MoE 在 M5 Pro 上很有價值
-
-`qwen3.6:35b-a3b` (3B active) 解碼 **~80 tok/s**,是同 35B 級 dense (`qwen3.6:35b` 41.68) 的兩倍。MoE 推論時 weights 走過記憶體只有 3B,剛好對齊「解碼受記憶體頻寬綁住」這條規律。
-
-### 6. macOS 電源模式對 dense 模型影響極大
-
-| 模型 | Automatic (run1) | High Power (run2) | 增幅 |
+| 測試情境 | Prompt 長度 (tokens) | 生成上限 (`num_predict`, tokens) | 取樣次數 |
 |---|---:|---:|---:|
-| `qwen3.6:35b` | 27.36 | 41.68 | +52% |
-| `qwen3.6:27b` | 6.24 | 11.82 | +89% |
-| 🍎 `qwen3.6:27b-coding-mxfp8` | 5.27 | 9.89 | +88% |
-| 🍎 `qwen3.6:27b-coding-nvfp4` | 16.32 | 16.34 | +0% |
+| Short | 26-32 | 256 | 5 |
+| Long | 149-156 | 512 | 4 |
+| 11k context | 約 11,000，`num_ctx=16384` | 256 | 3 |
 
-**精準量測必須先鎖 High Power**:
+解碼速度採用 Ollama server 回報的 `eval_count / eval_duration`。測試時鎖定 High Power：`pmset powermode=2`，並全程使用 `caffeinate -dimsu`。
 
-```bash
-sudo pmset -a powermode 2
-```
+## 歷史資料重點
 
-### 7. 16k 長上下文懲罰很小
+原始完整測試在 Ollama 0.21/run2 上跑 10 個模型。架構、量化、MLX 比較請以它作為歷史對照：
 
-所有 10 個模型從 short → 11k token xlong 解碼速度只衰減 **4–10%**。Apple M5 Pro / 64 GB 對 16k context 仍未撞瓶頸,KV cache 容量充足。
+| 歷史發現 | 結果 |
+|---|---|
+| 舊測試短輸出解碼最快 | `qwen3.6:35b-a3b-coding-nvfp4`，**80.61 tokens/s** |
+| 舊測試 11k cold prefill 最快 | `gemma4:e4b-nvfp4`，**4205.55 tokens/s** |
+| Apple Silicon 注意事項 | `mxfp8` 檔案更大，速度卻比 Q4_K_M 慢 |
+| MLX 注意事項 | 乾淨的 Gemma BF16 對照裡，MLX 幫 prefill，不幫 decode |
 
-<!-- mlx-caveat:v1 -->
-## ⚠️ MLX 對照組精確說明 — 引用 finding 3 / 4 前必讀
+## 原始結果
 
-10 個受測模型中,有 5 個是 MLX 變體（🍎）:
+- [Ollama 0.30.6 已安裝模型比較](./results/ollama_0.30.6_update/installed/00_comparison.md)
+- [MTP draft-4 重測](./results/ollama_0.30.6_update/mtp_draft4/00_comparison.md)
+- [MTP draft-8 重測](./results/ollama_0.30.6_update/mtp_draft8/00_comparison.md)
+- [歷史 10 模型報告](./REPORT.md)
 
-- 🍎 `qwen3.6:27b-coding-mxfp8`
-- 🍎 `qwen3.6:27b-coding-nvfp4`
-- 🍎 `qwen3.6:35b-a3b-coding-mxfp8`
-- 🍎 `qwen3.6:35b-a3b-coding-nvfp4`
-- 🍎 `gemma4:e4b-mlx-bf16`
+## 最後結論
 
-對 finding 3 / 4 的精確讀法:
-
-- **Finding 3「mxfp8 是地雷」**:對比是 🍎 `qwen3.6:27b-coding-mxfp8` (9.86 tok/s) vs 非 MLX 的 `qwen3.6:27b` Q4_K_M (11.82 tok/s)。精準說法:**Ollama Metal backend 上的 MLX mxfp8 路徑比 base GGUF Q4_K_M 路徑慢**,雖然檔案還大 1.8 倍。
-- **Finding 4「MLX 標籤對解碼沒用,但 prefill 大幅領先」**:只有 gemma4 那組是乾淨的「MLX vs 非 MLX 同 BF16」對比(🍎 `gemma4:e4b-mlx-bf16` vs `gemma4:e4b-it-bf16`)。Qwen3.6 的 `-coding-mxfp8` / `-coding-nvfp4` *兩個都是* MLX,所以那邊的 nvfp4-vs-mxfp8 對比其實是 **MLX 內部的量化差異**,不是隔離 MLX 路徑本身的效應。
-
-簡言之:🍎 = MLX 變體;本實驗組唯一一組真正「MLX vs 非 MLX、其他不變」的乾淨對比是 gemma4 的 BF16 兩個。
-
-## 測試環境
-
-- **硬體**:MacBook Pro (Mac17,9) / Apple M5 Pro / 64 GB Unified Memory
-- **OS**:Darwin 25.5.0 (macOS 26)
-- **Ollama**:v0.21.0
-- **電源**:AC 供電,`pmset powermode=2`(High Power)
-- **防睡眠**:`caffeinate -dimsu` 全程啟用
-- **Python**:3.14
-
-## 量測方法
-
-完整腳本見 [`bench.py`](./bench.py)。關鍵設計:
-
-- 每模型先 `keep_alive=0` 卸載、cold-start、warmup,再正式取樣
-- 全部 `temperature=0` `seed=42` `keep_alive=10m`,確保可重現
-- 三段 prompt:
-  - **short** × 5:26~32 token prompt → `num_predict=256`
-  - **long** × 4:149~156 token prompt → `num_predict=512`
-  - **xlong** × 3:~11k token prompt → `num_predict=256`、強制 `num_ctx=16384`
-- 純解碼速度用伺服器回報的 `eval_count / eval_duration`,**不受 KV cache 命中影響**
-- Prefill 速度只取每模型 long/xlong 的 **第一筆**(cold prefill),避免 Ollama 對相同 prompt 的 KV cache 重用污染平均值
-
-> ⚠️ Ollama 對相同 prompt 連續送出時會直接重用 KV cache,第 2 次起的 `prompt_eval_duration` 會異常巨大(cache hit)。本專案的報告把 prefill 拆成「冷啟 (run 1)」與「快取命中 (run 2+)」兩列。
-
-## 重現步驟
-
-```bash
-# 1. 切到 High Power
-sudo pmset -a powermode 2
-
-# 2. 確保 ollama 服務在跑
-curl -s http://localhost:11434/api/version
-
-# 3. 拉模型
-for m in qwen3.6:35b qwen3.6:27b qwen3.6:27b-coding-mxfp8 \
-         qwen3.6:27b-coding-nvfp4 qwen3.6:35b-a3b-coding-mxfp8 \
-         qwen3.6:35b-a3b-coding-nvfp4 \
-         gemma4:e4b gemma4:e4b-it-bf16 gemma4:e4b-mlx-bf16 gemma4:e4b-nvfp4; do
-  ollama pull "$m"
-done
-
-# 4. 防系統睡眠並執行 benchmark
-caffeinate -dimsu -t 18000 &
-python3 bench.py \
-  --models qwen3.6:35b qwen3.6:27b qwen3.6:27b-coding-mxfp8 \
-           qwen3.6:27b-coding-nvfp4 qwen3.6:35b-a3b-coding-mxfp8 \
-           qwen3.6:35b-a3b-coding-nvfp4 \
-           gemma4:e4b gemma4:e4b-it-bf16 gemma4:e4b-mlx-bf16 gemma4:e4b-nvfp4 \
-  --output-dir results \
-  --short-runs 5 --long-runs 4 --xlong-runs 3 \
-  --short-predict 256 --long-predict 512 --xlong-predict 256 \
-  --xlong-num-ctx 16384
-
-# 5. 產生對比報告
-python3 render_report.py
-```
-
-## 檔案結構
-
-```
-m5pro-llm-bench/
-├── README.md / README.<lang>.md    # 12 種語言版本
-├── REPORT.md                        # 完整對比報告
-├── bench.py                         # 量測腳本
-├── render_report.py                 # 後處理(results/*.json → REPORT.md)
-└── results/
-    ├── qwen3.6_*.json / .md         # 6 個 Qwen3.6 模型 — 原始 + 摘要
-    └── gemma4_*.json / .md          # 4 個 Gemma4 模型 — 原始 + 摘要
-```
-
-## 已知量測限制
-
-- **Gemma4 系列在 short prompt 下 TTFT 偏高(1.6–5.7s)**:與 prefill 時間 (32 / ~1400 ≈ 0.02s) 不成比例,可能是 Ollama 對 gemma3-style chat template 的處理。
-- **Gemma4 xlong TTFT 顯示 0.00s 是 client 端串流偵測 bug**:gemma4 串流首 chunk 不含 `response`/`thinking` 字串,客戶端的 first-token 偵測未觸發。實際 TTFT 應該以 `xlong wall - eval_count / xlong_gen` 推算。
-- **Ollama 的 KV cache 重用**:同一 prompt 第 2 次起 prefill 幾乎免費,本專案的 prefill 數值只取每組第一筆冷啟。
-
-## 授權
-
-CC BY-SA 4.0。歡迎引用、修改、再發佈,請標註來源。
-
-## 後話
-
-如果你也是 M5 Pro 用戶,想跑類似的測試或追加模型(例如 Llama 3.3、DeepSeek、Phi 4),歡迎開 PR 或 issue。如果你的硬體不一樣(M4 / M3 Max / Studio),跑一份相同設定的數據也很有價值。
+沒有特殊限制時，直接用 `qwen3.6:35b-a3b-mtp-q4_K_M`，並保持預設 `draft_num_predict=4`。只有明確要 Gemma 時才選 `gemma4:26b-nvfp4`。只有在 22 GB 模型檔不適合、比較在意 17 GB 檔案大小時，才選 `qwen3.6:27b-mtp-q4_K_M`。不要把 MTP 預測 tokens 強制改成 `8`。
