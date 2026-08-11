@@ -1,10 +1,22 @@
-# M5 Pro LLM Benchmark — Ollama 0.30.6 Model Picks
+# M5 Pro LLM Benchmark — Ollama Model Picks
 
 **Languages**: **English** · [繁體中文](./README.zh-Hant.md) · [简体中文](./README.zh-Hans.md) · [日本語](./README.ja.md) · [한국어](./README.ko.md) · [Español](./README.es.md) · [Français](./README.fr.md) · [Deutsch](./README.de.md) · [Русский](./README.ru.md) · [Português](./README.pt.md) · [العربية](./README.ar.md) · [हिन्दी](./README.hi.md)
 
-This repo benchmarks local LLM throughput on **Apple M5 Pro / 64 GB** with [Ollama](https://ollama.com). The current results use **Ollama 0.30.6** and the models installed on this machine; the older 10-model suite is kept as historical evidence in [REPORT.md](./REPORT.md).
+This repo benchmarks local LLM throughput on **Apple M5 Pro / 64 GB** with [Ollama](https://ollama.com). The latest single-model run uses **Ollama 0.32.7**; the multi-model recommendations below come from **Ollama 0.30.6**. The older 10-model suite is kept as historical evidence in [REPORT.md](./REPORT.md).
 
-## Quick Pick
+## Latest Test — `muse-glimmer:30b-mlx` (Ollama 0.32.7)
+
+The same short / long / 11k-context benchmark shape produced the following result:
+
+| Model | Parameters | Quantization | Size (GB) | Cold load (s) | Short decode | Long decode | 11k-context decode |
+|---|---:|---|---:|---:|---:|---:|---:|
+| `muse-glimmer:30b-mlx` | 32.3B | nvfp4 | 21 | 2.95 | 24.05 | 26.30 | 24.74 |
+
+All decode values are tokens/s. The model default `draft_num_predict=15` was left unchanged, and all 12 measured samples succeeded. The first uncached 11k-context prefill was **363.43 tokens/s** with **30.32 s TTFT**; later identical-prompt samples hit the KV cache and are not cold-prefill measurements.
+
+This is a single-model run on a newer Ollama version, so it is reported separately from the Ollama 0.30.6 ranking. See the [raw Ollama 0.32.7 result](./results/ollama_0.32.7_update/installed/00_comparison.md).
+
+## Picks From the Ollama 0.30.6 Comparison
 
 | Situation | Pick | Reason |
 |---|---|---|
@@ -14,7 +26,7 @@ This repo benchmarks local LLM throughput on **Apple M5 Pro / 64 GB** with [Olla
 | You are tuning MTP | Keep the model default `draft_num_predict=4` | Forcing `8` was slower on both MTP models |
 | You only care about old full-suite comparisons | Read [REPORT.md](./REPORT.md) | Best source for the original 10-model quantization and MLX comparisons |
 
-## Current Results
+## Previous Comparative Results — Ollama 0.30.6
 
 | Model | Best use | Model file size (GB) | Short decode (tokens/s) | Long decode (tokens/s) | 11k-context decode (tokens/s) | Data source |
 |---|---|---:|---:|---:|---:|---|
@@ -35,7 +47,7 @@ This repo benchmarks local LLM throughput on **Apple M5 Pro / 64 GB** with [Olla
 
 **MTP conclusion:** do not force `draft_num_predict=8` on this machine. Use the model default `4`.
 
-## Models Tested In The Current Update
+## Models Tested In The Ollama 0.30.6 Update
 
 | Family | Model | Parameters | Quantization | Model file size (GB) | Notes |
 |---|---|---|---|---:|---|
@@ -68,11 +80,12 @@ The original full suite tested 10 models on Ollama 0.21/run2. Keep using it for 
 
 ## Raw Results
 
+- [Ollama 0.32.7 `muse-glimmer:30b-mlx` result](./results/ollama_0.32.7_update/installed/00_comparison.md)
 - [Ollama 0.30.6 installed-model comparison](./results/ollama_0.30.6_update/installed/00_comparison.md)
 - [Retested MTP draft-4 comparison](./results/ollama_0.30.6_update/mtp_draft4/00_comparison.md)
 - [Retested MTP draft-8 comparison](./results/ollama_0.30.6_update/mtp_draft8/00_comparison.md)
 - [Historical 10-model report](./REPORT.md)
 
-## Final Decision
+## Ollama 0.30.6 Comparison Decision
 
 Use `qwen3.6:35b-a3b-mtp-q4_K_M` with the default `draft_num_predict=4` unless you have a specific reason not to. Choose `gemma4:26b-nvfp4` only when you specifically want Gemma. Choose `qwen3.6:27b-mtp-q4_K_M` only when the smaller 17 GB Qwen file matters more than speed. Do not force MTP draft tokens to `8`.

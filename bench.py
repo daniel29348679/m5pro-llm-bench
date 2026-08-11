@@ -591,7 +591,7 @@ def render_comparison_md(reports: list[ModelReport], output_path: Path, host: st
     rows_by_xlong_gen = sorted(rows, key=lambda r: r["xlong_gen"], reverse=True)
 
     lines: list[str] = []
-    lines.append("# Qwen3.6 系列 Ollama 速度綜合對比 (run2 — 高效能模式 + 16k 上下文)")
+    lines.append("# Ollama 速度綜合對比（高效能模式 + 16k 上下文）")
     lines.append("")
     lines.append(
         f"- 報告產生時間: `{datetime.now().astimezone().isoformat(timespec='seconds')}`"
