@@ -468,69 +468,70 @@ def render_model_md(report: ModelReport, output_path: Path) -> None:
     )
 
     lines: list[str] = []
-    lines.append(f"# Ollama 速度報告 — `{report.model}`")
+    lines.append(f"# Ollama Speed Report — `{report.model}`")
     lines.append("")
-    lines.append(f"- 開始: `{report.started_at}`")
-    lines.append(f"- 結束: `{report.finished_at}`")
-    lines.append(f"- 架構: `{report.architecture}`")
-    lines.append(f"- 參數量: `{report.parameter_count}`")
-    lines.append(f"- 量化格式: `{report.quantization}`")
-    lines.append(f"- 模型檔大小: `{report.size_bytes / 1e9:.2f} GB`")
-    lines.append(f"- 第一次冷啟動載入時間: `{report.load_first_request_s:.2f} s`")
+    lines.append(f"- Started: `{report.started_at}`")
+    lines.append(f"- Finished: `{report.finished_at}`")
+    lines.append(f"- Architecture: `{report.architecture}`")
+    lines.append(f"- Parameters: `{report.parameter_count}`")
+    lines.append(f"- Quantization: `{report.quantization}`")
+    lines.append(f"- Model file size: `{report.size_bytes / 1e9:.2f} GB`")
+    lines.append(f"- First cold-start load time: `{report.load_first_request_s:.2f} s`")
     lines.append("")
-    lines.append("## 量測說明")
+    lines.append("## Methodology")
     lines.append("")
-    lines.append("- 透過 Ollama `/api/generate` 串流 API 量測；以伺服器回報的 `eval_count / eval_duration` 計算純生成 tokens/s。")
-    lines.append("- `prompt eval tokens/s` = `prompt_eval_count / prompt_eval_duration`，反映 prefill 速度。")
-    lines.append("- `e2e tokens/s` = `eval_count / total_duration`，含 prompt prefill。")
-    lines.append("- TTFT 為串流首個 token 抵達 client 的 wall-clock 時間。")
-    lines.append("- 全部測試使用 `temperature=0`、`seed=42`，`keep_alive=10m`，先 warmup 再取樣。")
-    lines.append("- xlong 測試強制 `num_ctx=16384`，使用約 14k tokens 的 prompt 量測長上下文 prefill 與生成速度。")
+    lines.append("- Measurements use Ollama's streaming `/api/generate` endpoint. Decode throughput is calculated from the server-reported `eval_count / eval_duration`.")
+    lines.append("- `prompt eval tokens/s` = `prompt_eval_count / prompt_eval_duration`, which measures prefill throughput.")
+    lines.append("- `e2e tokens/s` = `eval_count / total_duration`, including prompt prefill.")
+    lines.append("- TTFT is the wall-clock time until the client receives the first streamed token.")
+    lines.append("- Every test uses `temperature=0`, `seed=42`, and `keep_alive=10m`, with a warmup before sampling.")
+    lines.append("- The xlong test forces `num_ctx=16384` and uses an approximately 14k-token prompt to measure long-context prefill and decode throughput.")
+    lines.append("- Later samples of an identical prompt can hit Ollama's KV cache. Prompt-evaluation means can therefore include cached samples; use each prompt group's first uncached sample for cold-prefill analysis.")
     lines.append("")
-    lines.append("## 摘要")
+    lines.append("## Summary")
     lines.append("")
-    lines.append("| 指標 | short prompt | long prompt | xlong prompt (16k) |")
+    lines.append("| Metric | short prompt | long prompt | xlong prompt (16k) |")
     lines.append("|---|---:|---:|---:|")
     lines.append(
-        f"| 生成 tokens/s（mean ± stdev） | "
+        f"| Decode tokens/s (mean ± stdev) | "
         f"{short_gen['mean']:.2f} ± {short_gen['stdev']:.2f} | "
         f"{long_gen['mean']:.2f} ± {long_gen['stdev']:.2f} | "
         f"{xlong_gen['mean']:.2f} ± {xlong_gen['stdev']:.2f} |"
     )
     lines.append(
-        f"| 生成 tokens/s（median / max） | "
+        f"| Decode tokens/s (median / max) | "
         f"{short_gen['median']:.2f} / {short_gen['max']:.2f} | "
         f"{long_gen['median']:.2f} / {long_gen['max']:.2f} | "
         f"{xlong_gen['median']:.2f} / {xlong_gen['max']:.2f} |"
     )
     lines.append(
-        f"| prompt eval tokens/s（mean） | "
+        f"| Prompt evaluation tokens/s (mean, including cached samples) | "
         f"{short_prompt['mean']:.2f} | "
         f"{long_prompt['mean']:.2f} | "
         f"{xlong_prompt['mean']:.2f} |"
     )
     lines.append(
-        f"| e2e tokens/s（mean） | "
+        f"| End-to-end tokens/s (mean) | "
         f"{short_e2e['mean']:.2f} | "
         f"{long_e2e['mean']:.2f} | "
         f"{xlong_e2e['mean']:.2f} |"
     )
     lines.append(
-        f"| TTFT 秒（mean） | "
+        f"| TTFT seconds (mean) | "
         f"{short_ttft['mean']:.3f} | "
         f"{long_ttft['mean']:.3f} | "
         f"{xlong_ttft['mean']:.3f} |"
     )
     lines.append(
-        f"| 樣本數 (n) | {short_gen['n']} | {long_gen['n']} | {xlong_gen['n']} |"
+        f"| Samples (n) | {short_gen['n']} | {long_gen['n']} | {xlong_gen['n']} |"
     )
     if xlong:
         lines.append(
-            f"| 平均 prompt_eval_count | - | - | {xlong_prompt_n_avg:.0f} tokens |"
+            f"| Mean prompt_eval_count | - | - | {xlong_prompt_n_avg:.0f} tokens |"
         )
     lines.append("")
 
-    lines.append("## 每次取樣明細")
+    lines.append("## Per-Sample Results")
     lines.append("")
     lines.append(
         "| # | prompt | ok | gen tok/s | prompt tok/s | e2e tok/s | TTFT (s) | "
@@ -540,13 +541,13 @@ def render_model_md(report: ModelReport, output_path: Path) -> None:
     for i, s in enumerate(report.samples, 1):
         if not s.get("ok"):
             lines.append(
-                f"| {i} | {s.get('prompt_label')} | ❌ {s.get('error')} | - | - | - | - | - | - | - | - | "
+                f"| {i} | {s.get('prompt_label')} | FAIL: {s.get('error')} | - | - | - | - | - | - | - | - | "
                 f"{s.get('wall_total_s', 0):.2f} |"
             )
             continue
         sm = Sample(**{k: v for k, v in s.items() if k != "_kind"})
         lines.append(
-            f"| {i} | {sm.prompt_label} | ✅ | {sm.gen_tps:.2f} | {sm.prompt_tps:.2f} | "
+            f"| {i} | {sm.prompt_label} | PASS | {sm.gen_tps:.2f} | {sm.prompt_tps:.2f} | "
             f"{sm.e2e_tps:.2f} | {sm.ttft_s:.3f} | {sm.prompt_eval_count} | "
             f"{sm.eval_count} | {sm.thinking_chars} | {sm.response_chars} | "
             f"{sm.wall_total_s:.2f} |"
@@ -591,23 +592,23 @@ def render_comparison_md(reports: list[ModelReport], output_path: Path, host: st
     rows_by_xlong_gen = sorted(rows, key=lambda r: r["xlong_gen"], reverse=True)
 
     lines: list[str] = []
-    lines.append("# Ollama 速度綜合對比（高效能模式 + 16k 上下文）")
+    lines.append("# Ollama Speed Comparison (High Power Mode + 16k Context)")
     lines.append("")
     lines.append(
-        f"- 報告產生時間: `{datetime.now().astimezone().isoformat(timespec='seconds')}`"
+        f"- Report generated: `{datetime.now().astimezone().isoformat(timespec='seconds')}`"
     )
-    lines.append(f"- 主機: {host}")
+    lines.append(f"- Host: {host}")
     lines.append(f"- Python: `{sys.version.split()[0]}`")
     lines.append(f"- Ollama URL: `{OLLAMA_URL}`")
-    lines.append("- 系統電源模式: `pmset powermode=2`（High Power, AC 供電）")
-    lines.append("- 防睡眠: `caffeinate -dimsu` 全程啟用")
-    lines.append("- 測試設定: `temperature=0` `seed=42` `keep_alive=10m`")
-    lines.append("- short/long 採用預設 num_ctx；xlong 強制 `num_ctx=16384`")
+    lines.append("- System power mode: `pmset powermode=2` (High Power, AC power)")
+    lines.append("- Sleep prevention: `caffeinate -dimsu` enabled for the full run")
+    lines.append("- Test settings: `temperature=0` `seed=42` `keep_alive=10m`")
+    lines.append("- short/long use the default num_ctx; xlong forces `num_ctx=16384`")
     lines.append("")
-    lines.append("## 主表 — 三段 prompt 的生成 / prompt eval / TTFT")
+    lines.append("## Primary Results — Decode, Prompt Evaluation, and TTFT")
     lines.append("")
     lines.append(
-        "| 模型 | 參數 | 量化 | 大小 (GB) | 冷啟 (s) | "
+        "| Model | Parameters | Quantization | Size (GB) | Cold load (s) | "
         "short gen | long gen | xlong gen | "
         "short prompt | long prompt | xlong prompt | "
         "short TTFT | long TTFT | xlong TTFT |"
@@ -624,30 +625,30 @@ def render_comparison_md(reports: list[ModelReport], output_path: Path, host: st
             f"{r['short_ttft']:.3f} | {r['long_ttft']:.3f} | {r['xlong_ttft']:.2f} |"
         )
     lines.append("")
-    lines.append("> 所有數值單位：`gen` / `prompt` 為 tokens/s（越大越快）；`TTFT` 為秒（越小越好）。")
+    lines.append("> `gen` and `prompt` values are tokens/s (higher is better); `TTFT` is seconds (lower is better).")
     lines.append("")
 
-    lines.append("## 排名")
+    lines.append("## Rankings")
     lines.append("")
-    lines.append("### short prompt 生成速度")
+    lines.append("### Short-Prompt Decode Throughput")
     lines.append("")
-    lines.append("| 排名 | 模型 | short gen tok/s |")
+    lines.append("| Rank | Model | short gen tok/s |")
     lines.append("|---:|---|---:|")
     for i, r in enumerate(rows_by_short_gen, 1):
         lines.append(f"| {i} | `{r['model']}` | {r['short_gen']:.2f} |")
     lines.append("")
 
-    lines.append("### long prompt 生成速度")
+    lines.append("### Long-Prompt Decode Throughput")
     lines.append("")
-    lines.append("| 排名 | 模型 | long gen tok/s |")
+    lines.append("| Rank | Model | long gen tok/s |")
     lines.append("|---:|---|---:|")
     for i, r in enumerate(rows_by_long_gen, 1):
         lines.append(f"| {i} | `{r['model']}` | {r['long_gen']:.2f} |")
     lines.append("")
 
-    lines.append("### xlong (16k) 生成速度")
+    lines.append("### Xlong (16k) Decode Throughput")
     lines.append("")
-    lines.append("| 排名 | 模型 | xlong gen tok/s | 平均 prompt tokens |")
+    lines.append("| Rank | Model | xlong gen tok/s | Mean prompt tokens |")
     lines.append("|---:|---|---:|---:|")
     for i, r in enumerate(rows_by_xlong_gen, 1):
         lines.append(
@@ -656,13 +657,13 @@ def render_comparison_md(reports: list[ModelReport], output_path: Path, host: st
         )
     lines.append("")
 
-    lines.append("## 指標說明")
+    lines.append("## Metric Definitions")
     lines.append("")
-    lines.append("- **gen tok/s**：純生成 tokens/s（伺服器回報的 `eval_count / eval_duration`）。")
-    lines.append("- **prompt tok/s**：prefill 速度，反映模型一次吞下整段 prompt 的能力。")
-    lines.append("- **TTFT**：client 收到第一個 token 的 wall-clock 秒數，可視為使用者「按下送出後等多久」。")
-    lines.append("- **冷啟**：模型剛載入記憶體後第一次 forward 的時間（伺服器 `load_duration` 或 wall）。")
-    lines.append("- **xlong**：以一段 ~14k tokens 的合成語料 + `num_ctx=16384` 量測長上下文 prefill 與生成速度。")
+    lines.append("- **gen tok/s**: Decode throughput from the server-reported `eval_count / eval_duration`.")
+    lines.append("- **prompt tok/s**: Prefill throughput, measuring how quickly the model processes the input prompt.")
+    lines.append("- **TTFT**: Client-observed wall-clock time until the first streamed token arrives.")
+    lines.append("- **Cold load**: Time for the first forward pass after loading the model, using server `load_duration` or wall time.")
+    lines.append("- **xlong**: Long-context prefill and decode using an approximately 14k-token synthetic corpus with `num_ctx=16384`.")
     lines.append("")
 
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
