@@ -485,7 +485,7 @@ def render_model_md(report: ModelReport, output_path: Path) -> None:
     lines.append("- `e2e tokens/s` = `eval_count / total_duration`, including prompt prefill.")
     lines.append("- TTFT is the wall-clock time until the client receives the first streamed token.")
     lines.append("- Every test uses `temperature=0`, `seed=42`, and `keep_alive=10m`, with a warmup before sampling.")
-    lines.append("- The xlong test forces `num_ctx=16384` and uses an approximately 14k-token prompt to measure long-context prefill and decode throughput.")
+    lines.append("- The xlong test forces `num_ctx=16384` and uses an approximately 11k-token prompt to measure long-context prefill and decode throughput.")
     lines.append("- Later samples of an identical prompt can hit Ollama's KV cache. Prompt-evaluation means can therefore include cached samples; use each prompt group's first uncached sample for cold-prefill analysis.")
     lines.append("")
     lines.append("## Summary")
@@ -663,7 +663,7 @@ def render_comparison_md(reports: list[ModelReport], output_path: Path, host: st
     lines.append("- **prompt tok/s**: Prefill throughput, measuring how quickly the model processes the input prompt.")
     lines.append("- **TTFT**: Client-observed wall-clock time until the first streamed token arrives.")
     lines.append("- **Cold load**: Time for the first forward pass after loading the model, using server `load_duration` or wall time.")
-    lines.append("- **xlong**: Long-context prefill and decode using an approximately 14k-token synthetic corpus with `num_ctx=16384`.")
+    lines.append("- **xlong**: Long-context prefill and decode using an approximately 11k-token synthetic corpus with `num_ctx=16384`.")
     lines.append("")
 
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
